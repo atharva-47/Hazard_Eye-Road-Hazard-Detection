@@ -2,11 +2,11 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient
 from fastapi import APIRouter, HTTPException, Body
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
+from typing import Dict
 from dotenv import load_dotenv
 import asyncio
 
@@ -28,34 +28,64 @@ AUTHORITY_EMAIL = os.getenv("AUTHORITY_EMAIL", "local.authority@example.com")
 # Create router
 router = APIRouter()
 
-# Update the model at the top of the file
+# Updated HazardNotification model (image_url removed)
 class HazardNotification(BaseModel):
     location: Dict[str, float]
     timestamp: datetime
     type: str
-    severity: str
-    image_url: Optional[str] = None
-    hazard_count: Optional[int] = 1
 
-# Modify the send_email_to_authority function to be asynchronous
-async def send_email_to_authority(notification, report_id, nearby_count):
-    """Send email notification to the authority about a hazard"""
+@router.post("/hazard-notification")
+async def send_hazard_notification(notification: HazardNotification = Body(...)):
     try:
-        # Create a background task for sending the email
-        asyncio.create_task(_send_email_async(notification, report_id, nearby_count))
+        # Only process pothole notifications
+        if notification.type.lower() != "pothole":
+            return {"success": False, "message": "Only pothole hazards are reported to authorities"}
+            
+        # Check for an existing report (approx. 100m radius)
+        existing_report = hazard_reports.find_one({
+            "location.lat": {"$gte": notification.location["lat"] - 0.001, "$lte": notification.location["lat"] + 0.001},
+            "location.lng": {"$gte": notification.location["lng"] - 0.001, "$lte": notification.location["lng"] + 0.001},
+        })
+        
+        if existing_report:
+            report_time = existing_report.get("timestamp", datetime.min)
+            if isinstance(report_time, str):
+                report_time = datetime.fromisoformat(report_time.replace('Z', '+00:00'))
+            days_difference = (datetime.now() - report_time).days
+            if days_difference < 7:
+                return {"success": False, "message": "Recent report exists for this location"}
+        
+        # Generate Google Maps link using received coordinates
+        map_link = f"https://www.google.com/maps/search/?api=1&query={notification.location['lat']},{notification.location['lng']}"
+        
+        # Store in MongoDB without image_url field
+        report_id = hazard_reports.insert_one({
+            "location": notification.location,
+            "timestamp": notification.timestamp,
+            "type": notification.type,
+            "map_link": map_link,
+            "status": "reported"
+        }).inserted_id
+        
+        # Send email notification with the map link
+        await send_email_to_authority(notification, str(report_id), map_link)
+        
+        return {"success": True, "report_id": str(report_id)}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to process notification: {str(e)}")
+
+# Updated email sending functions
+async def send_email_to_authority(notification, report_id, map_link):
+    try:
+        asyncio.create_task(_send_email_async(notification, report_id, map_link))
         return True
     except Exception as e:
         print(f"Error scheduling email: {str(e)}")
         return False
 
-# Create a new function that actually sends the email
-async def _send_email_async(notification, report_id, nearby_count):
-    """Asynchronously send email notification to the authority"""
+async def _send_email_async(notification, report_id, map_link):
     try:
-        # Load environment variables
-        load_dotenv()
-        
-        # Email configuration
         email_host = os.getenv("EMAIL_HOST")
         email_port = int(os.getenv("EMAIL_PORT", "587"))
         email_user = os.getenv("EMAIL_USER")
@@ -63,107 +93,47 @@ async def _send_email_async(notification, report_id, nearby_count):
         authority_email = os.getenv("AUTHORITY_EMAIL")
         sender_email = os.getenv("SENDER_EMAIL")
         
-        # Create message
         msg = MIMEMultipart()
         msg['From'] = sender_email
         msg['To'] = authority_email
         msg['Subject'] = f"Road Hazard Alert: {notification.type.capitalize()} Detected"
         
-        # Email body
+        # Directly convert the timestamp to IST (UTC+5:30)
+        ist_tz = timezone(timedelta(hours=5, minutes=30))
+        ts_ist = notification.timestamp.astimezone(ist_tz)
+        indian_time_str = ts_ist.strftime("%Y-%m-%d %I:%M:%S %p IST")
+        
         body = f"""
         <html>
         <body>
             <h2>Road Hazard Alert</h2>
             <p><strong>Type:</strong> {notification.type.capitalize()}</p>
-            <p><strong>Severity:</strong> {notification.severity}</p>
             <p><strong>Location:</strong> Lat: {notification.location['lat']}, Lng: {notification.location['lng']}</p>
-            <p><strong>Time Detected:</strong> {notification.timestamp}</p>
-            <p><strong>Report ID:</strong> {report_id}</p>
-            <p><strong>Nearby Reports:</strong> {nearby_count} similar hazards reported in this area in the last 30 days</p>
-            <p>Please take appropriate action to address this road hazard.</p>
+            <p><strong>Date & Time:</strong> {indian_time_str}</p>
+            <p><strong>Map:</strong> <a href="{map_link}">View Location</a></p>
+            <p>There is a possible road hazard at the specified location. Please take appropriate action.</p>
         </body>
         </html>
         """
-        
         msg.attach(MIMEText(body, 'html'))
         
-        # Add image if available
-        if notification.image_url:
-            img_data = requests.get(notification.image_url).content
-            image = MIMEImage(img_data)
-            image.add_header('Content-ID', '<image1>')
-            msg.attach(image)
-        
-        # Connect to server and send email
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, lambda: _send_smtp_email(
-            email_host, email_port, email_user, email_password, 
+            email_host, email_port, email_user, email_password,
             sender_email, authority_email, msg.as_string()
         ))
         
-        print(f"Email notification sent for hazard report {report_id}")
+        print(f"Email sent for report {report_id}")
         return True
     except Exception as e:
-        print(f"Failed to send email notification: {str(e)}")
+        print(f"Email send error: {e}")
         return False
 
 def _send_smtp_email(host, port, user, password, sender, recipient, message):
-    """Send email via SMTP - runs in executor to avoid blocking"""
     with smtplib.SMTP(host, port) as server:
         server.starttls()
         server.login(user, password)
         server.sendmail(sender, recipient, message)
-
-# Modify the send_hazard_notification endpoint to use the async email function
-@router.post("/hazard-notification")
-async def send_hazard_notification(notification: HazardNotification = Body(...)):
-    try:
-        # Only process pothole notifications (class 0)
-        if notification.type.lower() != "pothole":
-            return {"success": False, "message": "Only pothole hazards are reported to authorities"}
-            
-        # Check if we've already reported a hazard at this location
-        # Using approximately 100 meter radius (0.001 degrees ≈ 111 meters)
-        existing_report = hazard_reports.find_one({
-            "location.lat": {"$gte": notification.location["lat"] - 0.001, "$lte": notification.location["lat"] + 0.001},
-            "location.lng": {"$gte": notification.location["lng"] - 0.001, "$lte": notification.location["lng"] + 0.001},
-        })
-        
-        # Count nearby hazards in a slightly larger area (500m radius)
-        nearby_count = hazard_reports.count_documents({
-            "location.lat": {"$gte": notification.location["lat"] - 0.005, "$lte": notification.location["lat"] + 0.005},
-            "location.lng": {"$gte": notification.location["lng"] - 0.005, "$lte": notification.location["lng"] + 0.005},
-            "timestamp": {"$gte": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30)}
-        })
-        
-        if existing_report:
-            # If the report is less than 7 days old, don't send a new notification
-            report_time = existing_report.get("timestamp", datetime.min)
-            if isinstance(report_time, str):
-                report_time = datetime.fromisoformat(report_time.replace('Z', '+00:00'))
-            
-            days_difference = (datetime.now() - report_time).days
-            if days_difference < 7:
-                return {"success": False, "message": "Recent report exists for this location"}
-        
-        # Store in MongoDB
-        report_id = hazard_reports.insert_one({
-            "location": notification.location,
-            "timestamp": notification.timestamp,
-            "type": notification.type,
-            "severity": notification.severity,
-            "image_url": notification.image_url,
-            "status": "reported",
-            "hazard_count": notification.hazard_count if hasattr(notification, 'hazard_count') else 1
-        }).inserted_id
-        
-        # Send email notification with nearby count - now async
-        await send_email_to_authority(notification, str(report_id), nearby_count)
-        
-        return {"success": True, "report_id": str(report_id)}
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process notification: {str(e)}")
 
 @router.get("/hazard-reports")
 async def get_hazard_reports():

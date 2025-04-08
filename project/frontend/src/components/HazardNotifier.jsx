@@ -21,10 +21,8 @@ export default function HazardNotifier({
         location: currentLocation,
         timestamp: new Date(),
         type: hazardDetected.type,
-        severity: hazardDetected.severity || 'medium',
       };
       
-      // Check if we already have a similar location in pending
       const isDuplicate = pendingNotificationsRef.current.some(hazard => 
         Math.abs(hazard.location.lat - currentLocation.lat) < 0.0001 && 
         Math.abs(hazard.location.lng - currentLocation.lng) < 0.0001
@@ -43,21 +41,17 @@ export default function HazardNotifier({
     const checkInterval = setInterval(() => {
       const now = new Date();
       
-      // If we have pending notifications and cooldown period has passed
       if (pendingNotificationsRef.current.length > 0 && 
           (!lastNotificationRef.current || 
            now - lastNotificationRef.current > notificationCooldownRef.current)) {
         
-        // Send up to 3 notifications at once after cooldown
         const batchSize = Math.min(3, pendingNotificationsRef.current.length);
         const hazardsToReport = pendingNotificationsRef.current.splice(0, batchSize);
         
-        // Send notifications to backend
         hazardsToReport.forEach(hazard => {
           sendHazardNotification(hazard);
         });
         
-        // Update last notification time
         lastNotificationRef.current = new Date();
       }
     }, 10000); // Check every 10 seconds
@@ -78,11 +72,9 @@ export default function HazardNotifier({
       }
     } catch (error) {
       console.error('Failed to send hazard notification:', error);
-      // Put back in the queue to try again later
       pendingNotificationsRef.current.unshift(hazard);
     }
   };
   
-  // This component doesn't render anything
   return null;
 }
