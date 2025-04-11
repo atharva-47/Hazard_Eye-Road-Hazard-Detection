@@ -4,7 +4,7 @@
 DETECTION_THRESHOLDS = {
     # Road hazard model thresholds (yolov12.pt)
     "class_0": 0.35,  # Pothole
-    "class_1": 0.90,  # Speedbump
+    "class_1": 0.65,  # Speedbump
     
     # Standard object detection thresholds (yolov8n.pt)
     "person": 0.50,   # Person
