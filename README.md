@@ -1,7 +1,3 @@
-Got it! Here's a **professional and well-structured `README.md`** in Markdown format for your **Hazard\_Eye – Road Hazard Detection** project:
-
----
-
 ````markdown
 # 🚧 Hazard_Eye – Real-Time Road Hazard Detection System
 
@@ -108,9 +104,4 @@ Watch demo clips and screenshots in `/media`.
 
 This project is licensed under the MIT License. Feel free to use, modify, and share.
 
-```
-
----
-
-Would you like me to auto-generate a visual banner or add GitHub badges to make it even more polished?
 ```
