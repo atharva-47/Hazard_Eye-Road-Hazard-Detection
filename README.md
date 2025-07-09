@@ -90,7 +90,7 @@ npm start
 ```
 
 Once both servers are running, access the application at:  
-👉 **http://localhost:3000**
+👉 **http://localhost:51730**
 
 ---
 
