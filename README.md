@@ -1,6 +1,6 @@
 # 🚧 Hazard_Eye – Real-Time Road Hazard Detection System
 
-Hazard_Eye is a smart road safety system that detects real-time hazards such as potholes, speed bumps, and animals using computer vision. It integrates AI with modern web technologies to alert users and auto-report danger zones to local authorities. Designed for smart cities and intelligent transport systems, this project leverages FastAPI, React.js, and YOLOv5.
+Hazard_Eye is a smart road safety system that detects real-time hazards such as potholes, speed bumps, and animals using computer vision. It integrates AI with modern web technologies to alert users and auto-report danger zones to local authorities. Designed for smart cities and intelligent transport systems, this project leverages FastAPI, React.js, and YOLOv12.
 
 ---
 
@@ -10,7 +10,7 @@ Hazard_Eye is a smart road safety system that detects real-time hazards such as 
 
 ## 🧠 Overview
 
-- **Live Hazard Detection** using YOLOv5
+- **Live Hazard Detection** using YOLOv12
 - **Real-time Alerts** through UI and automated notifications
 - **Smart Braking Simulation** logic based on object proximity
 - **Map Integration** using TomTom API to visualize hazard zones
@@ -24,7 +24,7 @@ Hazard_Eye is a smart road safety system that detects real-time hazards such as 
 |-------------|-----------------------------------|
 | Frontend    | React.js, HTML, CSS, JavaScript   |
 | Backend     | FastAPI (Python)                  |
-| AI Model    | YOLOv5 (PyTorch)                  |
+| AI Model    | YOLOv12 (PyTorch)                  |
 | Mapping     | TomTom Maps API                   |
 | Deployment  | Uvicorn, GitHub, Localhost        |
 | Extras      | SMTP Email, Geolocation, JSON APIs|
@@ -121,7 +121,7 @@ Once both servers are running, access the application at:
 
 ## 📊 Key Results
 
-- 🚧 95%+ detection accuracy using YOLOv5
+- 🚧 95%+ detection accuracy using YOLOv12
 - ⚠️ 70% faster hazard response simulation
 - 📤 80% reduction in manual reporting efforts
 - 📍 Over 10 zones mapped using TomTom Maps
