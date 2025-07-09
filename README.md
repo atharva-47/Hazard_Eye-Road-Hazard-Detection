@@ -4,7 +4,7 @@ Hazard_Eye is a smart road safety system that detects real-time hazards such as 
 
 ---
 
-![Hazard_Eye Banner](assets/banner.jpg) <!-- Replace with actual banner path -->
+![Hazard_Eye Banner](assets/banner.png) <!-- Replace with actual banner path -->
 
 ---
 
