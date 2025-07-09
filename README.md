@@ -114,8 +114,6 @@ Once both servers are running, access the application at:
 
 ## 🎥 Demo
 
-> 🔗 *(Add your demo video link here)*  
-> Example:  
 > [![Watch the Demo](https://img.youtube.com/vi/OD7fzQ6UxjY/maxresdefault.jpg)](https://youtu.be/OD7fzQ6UxjY)
 
 
