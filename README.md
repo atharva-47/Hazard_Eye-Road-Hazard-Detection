@@ -1,107 +1,51 @@
-````markdown
 # 🚧 Hazard_Eye – Real-Time Road Hazard Detection System
 
-Hazard_Eye is an AI-powered web application designed to detect road hazards like potholes, speed bumps, and living beings in real-time using computer vision. Built with a FastAPI backend, React frontend, and YOLOv5 object detection, the system enhances road safety and automates hazard reporting.
+Hazard_Eye is a smart road safety system that detects real-time hazards such as potholes, speed bumps, and animals using computer vision. It integrates AI with modern web technologies to alert users and auto-report danger zones to local authorities. Designed for smart cities and intelligent transport systems, this project leverages FastAPI, React.js, and YOLOv5.
 
 ---
 
-## 📌 Features
-
-- ⚠️ Real-time hazard detection (potholes, bumps, animals, etc.)
-- 🧠 YOLOv5 model integration for accurate object detection
-- 🚦 Simulated emergency braking logic based on hazard proximity
-- 🌐 TomTom Maps API for hazard zone visualization
-- 📧 Auto-email reports to local authorities with GPS location
-- 📊 Detection accuracy over 95%
-- 📉 Reduced manual reporting time by 80%
+![Hazard_Eye Banner](assets/banner.jpg) <!-- Replace with actual banner path -->
 
 ---
 
-## 🛠 Tech Stack
+## 🧠 Overview
 
-| Component   | Technology         |
-|-------------|--------------------|
-| Frontend    | React.js           |
-| Backend     | FastAPI (Python)   |
-| AI Model    | YOLOv5             |
-| Mapping     | TomTom Maps API    |
-| Email Alerts| SMTP / Email API   |
-| Versioning  | Git & GitHub       |
+- **Live Hazard Detection** using YOLOv5
+- **Real-time Alerts** through UI and automated notifications
+- **Smart Braking Simulation** logic based on object proximity
+- **Map Integration** using TomTom API to visualize hazard zones
+- **Automated Reporting** with email alerts and geo-tagged locations
 
 ---
 
-## 📂 Project Structure
+## 🔧 Tech Stack
+
+| Layer       | Technology                        |
+|-------------|-----------------------------------|
+| Frontend    | React.js, HTML, CSS, JavaScript   |
+| Backend     | FastAPI (Python)                  |
+| AI Model    | YOLOv5 (PyTorch)                  |
+| Mapping     | TomTom Maps API                   |
+| Deployment  | Uvicorn, GitHub, Localhost        |
+| Extras      | SMTP Email, Geolocation, JSON APIs|
+
+---
+
+## 📁 Project Structure
 
 ```bash
 Hazard_Eye/
 ├── backend/
-│   ├── main.py              # FastAPI app
-│   ├── detect.py            # YOLO inference logic
-│   └── utils/               # Helper functions
+│   ├── main.py              # FastAPI server logic
+│   ├── detect.py            # Object detection integration
+│   ├── utils/               # Helper methods
+│   └── config.py            # API keys, credentials
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # React UI components
-│   │   └── App.js           # Main React file
-├── media/                   # Sample detection videos/images
+│   │   ├── components/      # UI components
+│   │   ├── pages/           # Views
+│   │   └── App.js           # Main app logic
+├── media/                   # Screenshots / video samples
+├── assets/                  # Images, banner, icons
 ├── README.md
 └── requirements.txt
-````
-
----
-
-## 🚀 How to Run
-
-### 🔧 Prerequisites
-
-* Python 3.9+
-* Node.js 18+
-* Git
-
-### ✅ Backend (FastAPI)
-
-```bash
-cd backend/
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-### ✅ Frontend (React)
-
-```bash
-cd frontend/
-npm install
-npm start
-```
-
-Access the app at: [http://localhost:3000](http://localhost:3000)
-
----
-
-## 📬 Email Alert Setup
-
-1. Configure your email credentials in `config.py`.
-2. The app sends hazard reports to pre-set authority addresses.
-3. Attachments include location & image evidence.
-
----
-
-## 🧪 Demo
-
-Watch demo clips and screenshots in `/media`.
-
----
-
-## 👨‍💻 Author
-
-**Atharv Bargir**
-🔗 [Portfolio](https://atharvabargir.me/portfolio)
-🔗 [LinkedIn](https://linkedin.com/in/atharv-bargir-081927250)
-📧 [atharvabargir3112@gmail.com](mailto:atharvabargir3112@gmail.com)
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License. Feel free to use, modify, and share.
-
-```
